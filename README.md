@@ -42,8 +42,8 @@ usage: train_gac.py env=ENV_NAME
 optional arguments:
   experiment          Name of experiment for logging purposes
   seed                Random seed
-  load_demo_path      Path to the saved expert demonstrations
-  load_expert_path    Path to the saved expert (only for evaluation purposes)
+  load_demo_path      Global path to the saved expert demonstrations
+  load_expert_path    Global path to the saved expert (only for evaluation purposes)
   num_transitions     Number of demonstrations to use
 ```
 
@@ -54,7 +54,7 @@ Configuration files are stored in  `config/`. For example, the configuration fil
 Download the [expert demonstations](https://tinyurl.com/5acd9kz7) and place them in `gac/saved_demo`. Each pickle file contains 1000 demonstration trajectories for a different environment. The environment names match the file names. The usage of `train_gac.py` is quite self-evident. For example, we can train GAC for the `walker_walk` task with one demonstration by running
 
 ```bash
-python train_gac.py env='walker_walk' experiment='walker_walk' seed=0 load_demo_path='saved_demo/walker_walk.pickle' load_expert_path='saved_experts/walker_walk.pt' num_transitions=1
+python train_gac.py env='walker_walk' experiment='walker_walk' seed=0 load_demo_path='/user/gac/saved_demo/walker_walk.pickle' load_expert_path='/user/gac/saved_experts/walker_walk.pt' num_transitions=1
 ```
 
 Choose from a variety of environments `walker_stand, walker_walk, hopper_stand, cheetah_run, quadruped_run`.
