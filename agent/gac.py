@@ -504,7 +504,7 @@ class GACAgent(Agent):
             # Expert (s), Expert (a)
             exp_q, _ = self.critic(next_obs, next_action)
             exp_r = self.irl_reward(next_obs, next_action)
-            print(exp_r[:200])
+#            print(exp_r[:200])
 
             # Expert (s), Random (a)
             r_q, _ = self.critic(next_obs, rand_acs)

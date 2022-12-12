@@ -5,12 +5,12 @@ from torch import distributions as pyd
 import torch.nn.functional as F
 from torch.nn.utils.parametrizations import spectral_norm
 #from torch.nn.utils import spectral_norm
-import gym
 import os
 from collections import deque
 import random
 import math
 import pdb
+import gym
 
 import base64
 import signal

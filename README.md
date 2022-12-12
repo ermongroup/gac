@@ -22,6 +22,8 @@ We assume you have access to a gpu that can run CUDA 9.2 or above. The simplest 
 conda env create -f conda_env.yaml
 source activate gac
 ```
+Next, install the `ReparamModule` package from [here](https://github.com/SsnL/PyTorch-Reparam-Module).
+
 
 ## Running Experiments
 
