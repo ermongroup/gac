@@ -72,7 +72,8 @@ tensorboard --logdir exp/2022.10.01 --port 8008
 
 The evaluation metrics are then found at `http://localhost:8008`. The "learner_episode_reward" graph shows the average episode reward obtained during the evaluation step. A sample learning curve for the `walker_walk` task should look like so.
 
-![alt text](https://tinyurl.com/yy22swkb)
+![Alt text](/figures/learning_curve.png "Sample learning curve for the walker_walk task")
+
 
 
 
