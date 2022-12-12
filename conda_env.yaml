@@ -12,12 +12,12 @@ dependencies:
   - scikit-image
   - pip:
     - termcolor
-    - git+git://github.com/deepmind/dm_control.git
-    - git+git://github.com/denisyarats/dmc2gym.git
+    - git+https://github.com/deepmind/dm_control.git
+    - git+https://github.com/denisyarats/dmc2gym.git
     - tb-nightly
     - imageio
     - imageio-ffmpeg
-    - git+git://github.com/facebookresearch/hydra@0.11_branch
+    - git+https://github.com/facebookresearch/hydra@0.11_branch
     - pandas
     - ipdb
     - tqdm
