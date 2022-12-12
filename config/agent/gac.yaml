@@ -1,0 +1,98 @@
+agent:
+  name: gac
+  class: agent.gac.GACAgent
+  params:
+    obs_dim: ??? # to be specified later
+    action_dim: ??? # to be specified later
+    action_range: ??? # to be specified later
+    device: ${device}
+    critic_cfg: ${double_q_critic}
+    actor_cfg: ${diag_gaussian_actor}
+    irl_reward_cfg: ${irl_reward}
+    irl_grad_cfg: ${irl_grad}
+    discount: 0.99
+    init_temperature: 0.01
+    alpha_lr: 1e-4
+    alpha_betas: [0.9, 0.999]
+    actor_lr: 1e-4
+    actor_betas: [0.9, 0.999]
+    actor_update_frequency: 1
+    critic_lr: 1e-4
+    critic_betas: [0.9, 0.999]
+    critic_tau: 0.005
+    critic_target_update_frequency: 2
+    critic_target_hard_update_frequency: 1000
+    critic_reg_weight: 0.0
+    cql_alpha: 0.0
+    irl_reward_lr: 1e-4
+    irl_reward_betas: [0.9, 0.999]
+    irl_reward_noise: 0.0
+    irl_reward_reg_weight: 0.0
+    irl_reward_update_frequency: 1
+    irl_reward_horizon: 100
+    irl_grad_lr: 1e-4
+    irl_grad_betas: [0.9, 0.999]
+    irl_grad_tau: 0.005
+    irl_grad_target_update_frequency: 2
+    batch_size: 1024
+    learnable_temperature: true
+
+expert:
+  name: sac
+  class: agent.sac.SACAgent
+  params:
+    obs_dim: ??? # to be specified later
+    action_dim: ??? # to be specified later
+    action_range: ??? # to be specified later
+    device: ${device}
+    critic_cfg: ${double_q_critic}
+    actor_cfg: ${diag_gaussian_actor}
+    discount: 0.99
+    init_temperature: 0.01
+    alpha_lr: 1e-4
+    alpha_betas: [0.9, 0.999]
+    actor_lr: 1e-4
+    actor_betas: [0.9, 0.999]
+    actor_update_frequency: 1
+    critic_lr: 1e-4
+    critic_betas: [0.9, 0.999]
+    critic_tau: 0.005
+    critic_target_update_frequency: 2
+    batch_size: 1024
+    learnable_temperature: true
+
+double_q_critic:
+  class: agent.critic.DoubleQCritic
+  params:
+    obs_dim: ${agent.params.obs_dim}
+    action_dim: ${agent.params.action_dim}
+    hidden_dim: 1024
+    hidden_depth: 2
+
+diag_gaussian_actor:
+  class: agent.actor.DiagGaussianActor
+#  class: agent.actor.NoSquashDiagGaussianActor
+  params:
+    obs_dim: ${agent.params.obs_dim}
+    action_dim: ${agent.params.action_dim}
+    hidden_depth: 2
+    hidden_dim: 1024
+    log_std_bounds: [-5, 2]
+
+irl_reward:
+  class: agent.reward.RewardMLP
+  params:
+    obs_dim: ${agent.params.obs_dim}
+    action_dim: ${agent.params.action_dim}
+    hidden_dim: 64
+    hidden_depth: 1
+    factor: 1
+
+irl_grad:
+  class: agent.reward.RewardGradientHybridMLP
+  params:
+    obs_dim: ${agent.params.obs_dim}
+    action_dim: ${agent.params.action_dim}
+    hidden_dim: 1024
+    hidden_depth: 2
+    output_dim: ???

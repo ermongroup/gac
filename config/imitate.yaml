@@ -1,0 +1,46 @@
+defaults:
+    - agent: gac
+
+env: cheetah_run
+
+# this needs to be specified manually
+experiment: test_exp
+online: true
+full_rl: false
+learn_grad: true
+learn_samples: false
+
+num_train_steps: 1e10
+num_transitions: false
+replay_buffer_capacity: 1e7
+
+num_seed_steps: 5000
+
+eval_frequency: 10000
+num_eval_episodes: 5
+
+device: cuda
+
+# logger
+log_frequency: 1000
+log_dump_frequency: 100
+log_save_tb: true
+
+# video recorder
+save_video: false
+
+# global seed
+seed: 1
+
+# checkpoint loading
+load_ckpt_path: false
+load_expert_path: false
+load_demo_path: false
+load_replay_path: false
+
+# hydra configuration
+hydra:
+    name: ${env}
+    run:
+        dir: ./exp/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}_seed_${seed}
+
