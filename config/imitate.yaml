@@ -10,7 +10,7 @@ full_rl: false
 learn_grad: true
 learn_samples: false
 
-num_train_steps: 1e10
+num_train_steps: 3e6
 num_transitions: false
 replay_buffer_capacity: 1e7
 

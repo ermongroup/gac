@@ -1,6 +1,6 @@
 # Understanding and Adopting Rational Behavior by Bellman Score Estimation
 
-This anonymous repo contains the implementation for an ICLR submission
+This anonymous repo contains the implementation for an [ICLR submission](https://tinyurl.com/y7byr8rx)
 
 **Note**: ** This repo is still a work in progress. **
 
@@ -50,7 +50,7 @@ Configuration files are stored in  `config/`. For example, the configuration fil
 
 ### Training
 
-Download the demonstations from and place them in `gac/saved_demo`. The usage of `train_gac.py` is quite self-evident. For example, we can train GAC for the `walker_walk` task with one demonstration by running
+Download the [expert demonstations](https://tinyurl.com/5acd9kz7) and place them in `gac/saved_demo`. The usage of `train_gac.py` is quite self-evident. For example, we can train GAC for the `walker_walk` task with one demonstration by running
 
 ```bash
 python train_gac.py env='walker_walk'
@@ -68,6 +68,6 @@ Running `train_gac.py` outputs evaluation metrics to the console. The long names
 tensorboard --logdir exp/2022.10.01 --port 8008
 ```
 
-The evaluation metrics are then found at `http://localhost:1993`. The "learner_episode_reward" graph shows the average episode reward obtained during the evaluation step.
+The evaluation metrics are then found at `http://localhost:8008`. The "learner_episode_reward" graph shows the average episode reward obtained during the evaluation step.
 
 
