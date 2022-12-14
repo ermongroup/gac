@@ -10,6 +10,8 @@ This anonymous repo contains the implementation for an [ICLR submission](https:/
 
 * PyTorch
 
+* cudatoolkit
+
 * PyYAML
 
 * hydra
@@ -17,12 +19,12 @@ This anonymous repo contains the implementation for an [ICLR submission](https:/
 * dm_control
 
 ## Requirements
-We assume you have access to a gpu that can run CUDA 9.2 or above. The simplest way to install all required dependencies is to create an anaconda environment and activate it:
+We assume you have access to a gpu that can run CUDA 9.2 or above. We used `pytorch==1.10.1` with `cudatoolkit==11.3.1` in our experiments. The simplest way to install all required dependencies is to create an anaconda environment and activate it:
 ```
 conda env create -f conda_env.yaml
 source activate gac
 ```
-Next, install the `ReparamModule` package from [here](https://github.com/SsnL/PyTorch-Reparam-Module).
+Next, install the `ReparamModule` package following the instructions from [here](https://github.com/SsnL/PyTorch-Reparam-Module).
 
 
 ## Running Experiments
@@ -54,7 +56,7 @@ Configuration files are stored in  `config/`. For example, the configuration fil
 Download the [expert demonstations](https://tinyurl.com/5acd9kz7) and place them in `gac/saved_demo`. Each pickle file contains 1000 demonstration trajectories for a different environment. The environment names match the file names. The usage of `train_gac.py` is quite self-evident. For example, we can train GAC for the `walker_walk` task with one demonstration by running
 
 ```bash
-python train_gac.py env='walker_walk' experiment='walker_walk' seed=0 load_demo_path='/user/gac/saved_demo/walker_walk.pickle' load_expert_path='/user/gac/saved_experts/walker_walk.pt' num_transitions=1
+python train_gac.py env='walker_walk' experiment='walker_walk' seed=0 load_demo_path=/user/gac/saved_demo/walker_walk.pickle load_expert_path=/user/gac/saved_experts/walker_walk.pt num_transitions=1
 ```
 
 Choose from a variety of environments `walker_stand, walker_walk, hopper_stand, cheetah_run, quadruped_run`.

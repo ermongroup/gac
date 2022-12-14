@@ -1,11 +1,15 @@
 name: gac
 channels:
   - defaults
-dependencies:
-  - python=3.7
-  - pip
   - pytorch
-  - cudatoolkit
+  - conda-forge
+dependencies:
+  - python==3.7
+  - pip
+  - pytorch==1.10.1
+  - torchvision==0.11.2
+  - torchaudio==0.10.1
+  - cudatoolkit==11.3.1
   - absl-py
   - pyparsing
   - jupyterlab
@@ -21,9 +25,11 @@ dependencies:
     - pandas
     - ipdb
     - tqdm
-    - torchvision
     - yapf
     - mujoco_py
     - sklearn
     - matplotlib
     - kornia
+    - future
+    - gym==0.21.0
+    - setuptools==59.5.0
