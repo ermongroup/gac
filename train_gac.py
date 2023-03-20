@@ -33,6 +33,13 @@ class WorkspaceGAC(WorkspaceImitation):
         # Load the true expert just to evaluate various metrics (not used for learning!)
         self.load_expert(cfg.load_expert_path)
 
+        # Get the irl_reward params to save
+        self.reward_params = self.agent.get_reward_params()
+
+        # Load reward for evaluation
+        if cfg.load_reward_path:
+            self.load_reward(cfg.load_reward_path)
+
         # Make directory for saving graphics
         self.figure_root_dir = utils.make_dir(self.work_dir, 'figures')
 
@@ -55,6 +62,18 @@ class WorkspaceGAC(WorkspaceImitation):
         expert.load_params(checkpoint['agent_params'])
 
         self.agent.set_expert(expert)
+
+
+    def save_reward(self):
+        torch.save({'reward_params': self.reward_params,
+                    'step': self.step},
+                   os.path.join(self.ckpt_root_dir, 'reward_step_{}.pt'.format(self.step)))
+
+
+    def load_reward(self, load_path):
+        print(f"Loading reward from {load_path}")
+        checkpoint = torch.load(load_path)
+        self.agent.load_reward_params(checkpoint['reward_params'])
 
 
     def evaluate_irl(self, actor, actor_name):
@@ -162,6 +181,10 @@ class WorkspaceGAC(WorkspaceImitation):
                     self.evaluate_irl(self.agent, 'learner')
                     self.evaluate_irl(self.agent.expert, 'expert')
                     self.logger.dump(self.step, ty='eval')
+
+                    # save a checkpoint
+                    if (self.cfg.save_reward and self.step < self.agent.stop_reward_update):
+                        self.save_reward()
 
                 self.logger.log('train/episode', episode, self.step)
                 self.logger.log('train/episode_reward', episode_reward, self.step)

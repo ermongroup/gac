@@ -40,16 +40,19 @@ class GACAgent(Agent):
                  critic_target_hard_update_frequency,
                  critic_reg_weight,
                  cql_alpha,
+                 use_true_reward,
                  irl_reward_lr,
                  irl_reward_betas,
+                 irl_reward_update_frequency,
                  irl_reward_noise,
                  irl_reward_reg_weight,
-                 irl_reward_update_frequency,
                  irl_reward_horizon,
                  irl_grad_lr,
                  irl_grad_betas,
+                 irl_grad_update_frequency,
                  irl_grad_tau,
                  irl_grad_target_update_frequency,
+                 stop_reward_update,
                  batch_size,
                  learnable_temperature):
 
@@ -83,11 +86,14 @@ class GACAgent(Agent):
         # set target entropy to -|A|
         self.target_entropy = -action_dim
 
+        ## GAC specific params
         # Learned reward
+        self.use_true_reward = use_true_reward
         self.irl_reward = hydra.utils.instantiate(irl_reward_cfg).to(self.device)
         self.irl_reward_noise = irl_reward_noise
         self.irl_reward_reg_weight = irl_reward_reg_weight
         self.irl_reward_update_frequency = irl_reward_update_frequency
+        self.irl_grad_update_frequency = irl_grad_update_frequency
         self.irl_reward_horizon = irl_reward_horizon
         self.discount_tensor = None
         self.irl_reward_cfg = irl_reward_cfg
@@ -102,11 +108,12 @@ class GACAgent(Agent):
         self.irl_grad_target.load_state_dict(self.irl_grad.state_dict())
         self.irl_grad_step = 0
 
+        # When to stop updating rewards
+        self.stop_reward_update = stop_reward_update
 
         # idx arrays
         self.grad_idx_init = False
         self.reward_idx_init = False
-
 
         # optimizers
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),
@@ -146,6 +153,15 @@ class GACAgent(Agent):
                 'critic_op': self.critic_optimizer.state_dict(),
                 'log_alpha_op': self.log_alpha_optimizer.state_dict()
                 }
+
+
+    def get_reward_params(self):
+        return {'irl_reward': self.irl_reward.state_dict()}
+
+
+    def load_reward_params(self, param_dict):
+        self.irl_reward.load_state_dict(param_dict['irl_reward'])
+
 
     def load_params(self, param_dict):
         self.actor.load_state_dict(param_dict['actor'])
@@ -235,6 +251,10 @@ class GACAgent(Agent):
         learner_grad = grad_Q[:batch_size].mean(dim=0).detach()
         expert_grad = grad_Q[batch_size:].mean(dim=0).detach()
         tot_grad = learner_grad - expert_grad
+
+
+        grad_norm = torch.abs(tot_grad).mean()
+        logger.log('train_irl_reward/grad_norm', grad_norm, step)
 
         self.irl_reward_optimizer.zero_grad()
         self.irl_reward.update_grad(tot_grad)
@@ -401,43 +421,46 @@ class GACAgent(Agent):
 
         # Update Q-gradient
         half_batch = int(self.batch_size/2)
-        for grad_idx in range(self.irl_reward_update_frequency):
-            # Sample batch from learner replay buffer
-            replay_obs, replay_action, replay_reward, replay_next_obs, replay_next_action, replay_not_done, replay_not_done_no_max = replay_buffer.sample(half_batch)
+#        half_batch = self.batch_size
 
-            # Sample a batch from expert demonstrations
-            demo_obs, demo_action, demo_reward, demo_next_obs, demo_next_action, demo_not_done, demo_not_done_no_max = demonstrations.sample(half_batch)
+        if step < self.stop_reward_update:
+            for grad_idx in range(self.irl_grad_update_frequency):
+                # Sample batch from learner replay buffer
+                replay_obs, replay_action, replay_reward, replay_next_obs, replay_next_action, replay_not_done, replay_not_done_no_max = replay_buffer.sample(half_batch)
 
-            # Aggregate learner and expert data
-            obs = torch.cat([replay_obs, demo_obs], dim=0)
-            action = torch.cat([replay_action, demo_action], dim=0)
-            reward = torch.cat([replay_reward, demo_reward], dim=0)
-            next_obs = torch.cat([replay_next_obs, demo_next_obs], dim=0)
-            next_action = torch.cat([replay_next_action, demo_next_action], dim=0)
-            not_done = torch.cat([replay_not_done, demo_not_done], dim=0)
-            not_done_no_max = torch.cat([replay_not_done_no_max, demo_not_done_no_max], dim=0)
+                # Sample a batch from expert demonstrations
+                demo_obs, demo_action, demo_reward, demo_next_obs, demo_next_action, demo_not_done, demo_not_done_no_max = demonstrations.sample(half_batch)
 
-            # Compute the reward parameter gradient at sampled state-actions
-            irl_grad = self.irl_reward.get_param_grad(obs, action, self.reparam_mod, self.batch_size).detach()
+                # Aggregate learner and expert data
+                obs = torch.cat([replay_obs, demo_obs], dim=0)
+                action = torch.cat([replay_action, demo_action], dim=0)
+                reward = torch.cat([replay_reward, demo_reward], dim=0)
+                next_obs = torch.cat([replay_next_obs, demo_next_obs], dim=0)
+                next_action = torch.cat([replay_next_action, demo_next_action], dim=0)
+                not_done = torch.cat([replay_not_done, demo_not_done], dim=0)
+                not_done_no_max = torch.cat([replay_not_done_no_max, demo_not_done_no_max], dim=0)
 
-            # Update the Q-gradient network
-            self.update_irl_grad_hybrid(obs,
-                                        action,
-                                        irl_grad,
-                                        next_obs,
-                                        next_action,
-                                        not_done_no_max,
-                                        logger,
-                                        step,
-                                        use_double_q=False)
+                # Compute the reward parameter gradient at sampled state-actions
+                irl_grad = self.irl_reward.get_param_grad(obs, action, self.reparam_mod, half_batch*2).detach()
+
+                # Update the Q-gradient network
+                self.update_irl_grad_hybrid(obs,
+                                            action,
+                                            irl_grad,
+                                            next_obs,
+                                            next_action,
+                                            not_done_no_max,
+                                            logger,
+                                            step,
+                                            use_double_q=False)
 
 
-            # Update Q-gradient target network
-            if self.irl_grad_step % self.irl_grad_target_update_frequency == 0:
-                utils.soft_update_params(self.irl_grad, self.irl_grad_target, self.irl_grad_tau)
+                # Update Q-gradient target network
+                if self.irl_grad_step % self.irl_grad_target_update_frequency == 0:
+                    utils.soft_update_params(self.irl_grad, self.irl_grad_target, self.irl_grad_tau)
 
-            # Update the Q-gradient step
-            self.irl_grad_step += 1
+                # Update the Q-gradient step
+                self.irl_grad_step += 1
 
         # Update Q-gradient for a couple extra steps before updating reward
         start_irl = train_cfg.num_seed_steps + 100
@@ -448,42 +471,47 @@ class GACAgent(Agent):
             # Update irl_reward with gradient of log-likelihood of demonstrations
             assert self.irl_reward.training
 
-            if train_cfg.learn_grad:
-                # Update reward once every N steps
-                if step % 20 == 0:
-                    learner_obs, _, _, _, _, _, _ = replay_buffer.sample_initial(self.batch_size, init_tolerance=1)
-                    expert_obs, expert_acs, _, _, _, _, _ = demonstrations.sample_initial(self.batch_size, init_tolerance=1)
+            # Update reward once every N steps
+            if step % self.irl_reward_update_frequency == 0 and step < self.stop_reward_update:
+                learner_obs, _, _, _, _, _, _ = replay_buffer.sample_initial(self.batch_size, init_tolerance=1)
+                expert_obs, expert_acs, _, _, _, _, _ = demonstrations.sample_initial(self.batch_size, init_tolerance=1)
 
-                    self.update_irl_reward_online_both(expert_obs=expert_obs,
-                                                       expert_acs=expert_acs,
-                                                       learner_obs=learner_obs,
-                                                       logger=logger,
-                                                       step=step,
-                                                       use_double_q=False)
+                self.update_irl_reward_online_both(expert_obs=expert_obs,
+                                                   expert_acs=expert_acs,
+                                                   learner_obs=learner_obs,
+                                                   logger=logger,
+                                                   step=step,
+                                                   use_double_q=False)
 
-                    self.update_reparam_mod()
+                self.update_reparam_mod()
 
 
-                # Update critic via Policy Evaluation on the learned rewards
-                obs, action, reward, next_obs, next_action, not_done, not_done_no_max = replay_buffer.sample(self.batch_size)
+            # Update critic via Policy Evaluation on the learned rewards
+            obs, action, reward, next_obs, next_action, not_done, not_done_no_max = replay_buffer.sample(self.batch_size)
+
+            if self.use_true_reward:
+                irl_reward = reward
+            else:
                 irl_reward = self.irl_reward(obs, action).detach()
-                self.update_critic_no_double_q(obs,
-                                               action,
-                                               irl_reward,
-                                               next_obs,
-                                               next_action,
-                                               not_done_no_max,
-                                               logger,
-                                               step,
-                                               self.actor,
-                                               no_double_q=False)
 
-                # Update critic target network
-                if step % self.critic_target_update_frequency == 0:
-                    utils.soft_update_params(self.critic, self.critic_target, self.critic_tau)
+            # Update critic
+            self.update_critic_no_double_q(obs,
+                                           action,
+                                           irl_reward,
+                                           next_obs,
+                                           next_action,
+                                           not_done_no_max,
+                                           logger,
+                                           step,
+                                           self.actor,
+                                           no_double_q=False)
 
-                # Update actor to be one-step improvement of critic
-                self.update_actor_no_double_q(obs, action, logger, step, no_double_q=False)
+            # Update critic target network
+            if step % self.critic_target_update_frequency == 0:
+                utils.soft_update_params(self.critic, self.critic_target, self.critic_tau)
+
+            # Update actor to be one-step improvement of critic
+            self.update_actor_no_double_q(obs, action, logger, step, no_double_q=False)
 
         # Save aggregated evaluation metrics
         if step >= start_irl and step % 1000 == 0:

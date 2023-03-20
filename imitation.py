@@ -108,6 +108,7 @@ class WorkspaceImitation(object):
         if cfg.load_ckpt_path:
             self.load_checkpoint(cfg.load_ckpt_path)
 
+
     def invoke_killer(self):
         # Manually save checkpoint or kill training
         if self.killer.kill_now:

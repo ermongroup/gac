@@ -10,13 +10,13 @@ full_rl: false
 learn_grad: true
 learn_samples: false
 
-num_train_steps: 3e6
+num_train_steps: 8e6
 num_transitions: false
 replay_buffer_capacity: 1e7
 
 num_seed_steps: 5000
 
-eval_frequency: 10000
+eval_frequency: 20000
 num_eval_episodes: 5
 
 device: cuda
@@ -33,7 +33,9 @@ save_video: false
 seed: 1
 
 # checkpoint loading
+save_reward: false
 load_ckpt_path: false
+load_reward_path: false
 load_expert_path: false
 load_demo_path: false
 load_replay_path: false
@@ -42,5 +44,5 @@ load_replay_path: false
 hydra:
     name: ${env}
     run:
-        dir: ./exp/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}_seed_${seed}
+        dir: ./exp/${now:%Y.%m.%d}/${experiment}_${env}_seed_${seed}_${now:%H%M}
 

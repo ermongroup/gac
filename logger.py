@@ -65,15 +65,9 @@ AGENT_TRAIN_FORMAT = {
         ('critic_loss', 'CLOSS', 'float'),
         ('critic_reg_loss', 'REGLOSS', 'float'),
         ('irl_grad_loss', 'ILOSS', 'float'),
+        ('irl_reward_grad_norm', 'GNORM', 'float'),
         ('irl_reward_true_grad_norm', 'TGRADNORM', 'float'),
         ('irl_reward_pred_grad_norm', 'PGRADNORM', 'float'),
-        ('irl_reward_clone_loss', 'CLONELOSS', 'float'),
-        ('irl_reward_mean', 'RMEAN', 'float'),
-        ('irl_reward_bellman_grad_norm', 'B_GRADNORM', 'float'),
-        ('irl_reward_expert_grad_norm', 'E_GRADNORM', 'float'),
-        ('irl_reward_l2_loss', 'L2', 'float'),
-        ('irl_reward_gac_loss', 'GAC', 'float'),
-        ('irl_reward_importance_weights', 'IWEIGHT', 'float')
     ],
 }
 
