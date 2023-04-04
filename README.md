@@ -1,8 +1,10 @@
 # Understanding and Adopting Rational Behavior by Bellman Score Estimation
 
-This anonymous repo contains the implementation for an [ICLR submission](https://tinyurl.com/y7byr8rx)
+Author: Kuno Kim 
 
-**Note**: ** This repo is still a work in progress. **
+This repo contains the official implementation for the [ICLR submission](https://tinyurl.com/y7byr8rx)
+
+**Note**: ** This repo is being actively updated. **
 
 -------------------------------------------------------------------------------------
 
